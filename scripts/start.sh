@@ -111,10 +111,10 @@ while ! curl -s "http://localhost:$API_PORT/api/health" > /dev/null 2>&1; do
 done
 echo -e "\n${GREEN}[SUCCESS]${NC} API server running (PID: $API_PID)"
 
-# Start Frontend
+# Start Frontend (with --host 0.0.0.0 for external access)
 echo -e ""
 echo -e "${BLUE}[STEP 5/5]${NC} Starting frontend server..."
-npm run dev > "$FRONTEND_LOG" 2>&1 &
+npm run dev -- --host 0.0.0.0 > "$FRONTEND_LOG" 2>&1 &
 FRONTEND_PID=$!
 echo "$FRONTEND_PID" > "$PID_FILE.frontend"
 
@@ -138,14 +138,22 @@ echo -e "\n${GREEN}[SUCCESS]${NC} Frontend running (PID: $FRONTEND_PID)"
 # Save combined PID file
 echo "$FRONTEND_PID,$API_PID" > "$PID_FILE"
 
+# Get server IP for external access
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║          ${APP_NAME} Server Running!                         ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}   Frontend:${NC}        http://localhost:${FRONTEND_PORT}"
-echo -e "${BLUE}   API Server:${NC}      http://localhost:${API_PORT}"
-echo -e "${BLUE}   API Health:${NC}      http://localhost:${API_PORT}/api/health"
+echo -e "${BLUE}   Local Access:${NC}"
+echo -e "     Frontend:      http://localhost:${FRONTEND_PORT}"
+echo -e "     API Server:    http://localhost:${API_PORT}"
+echo ""
+echo -e "${BLUE}   External Access:${NC}"
+echo -e "     Frontend:      http://${SERVER_IP}:${FRONTEND_PORT}"
+echo -e "     API Server:    http://${SERVER_IP}:${API_PORT}"
+echo -e "     API Health:    http://${SERVER_IP}:${API_PORT}/api/health"
 echo ""
 echo -e "${BLUE}   Database:${NC}        ${DB_NAME} @ ${DB_HOST}:${DB_PORT}"
 echo ""

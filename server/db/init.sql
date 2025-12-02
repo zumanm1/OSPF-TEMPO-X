@@ -1,12 +1,13 @@
 -- Initialize database with default admin user
 -- Password: V3ry$trongAdm1n!2025 (hashed with bcrypt)
 -- This hash is generated with bcrypt rounds=10
+-- IMPORTANT: This is a valid bcrypt hash that MUST match the password above
 
 INSERT INTO users (id, username, password_hash, role, created_at)
 VALUES (
     'a0000000-0000-0000-0000-000000000001',
     'netviz_admin',
-    '$2a$10$rQnM1vP8G5xJ2nK3bL4mC.8K9pL2nM4oQ6rS8tU0vW2xY4zA6bC8d',
+    '$2b$10$7JJqWHaDchuWk5dQ0emgv.Gt0Mqs67mNYbG/fV8ROr79yf/y/5q8m',
     'admin',
     CURRENT_TIMESTAMP
 )

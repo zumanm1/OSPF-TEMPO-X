@@ -19,12 +19,9 @@ const app = express();
 const PORT = parseInt(process.env.API_PORT || '9101');
 const FRONTEND_PORT = parseInt(process.env.VITE_PORT || '9100');
 
-// Middleware
+// Middleware - Allow all origins in development, configure for production
 app.use(cors({
-  origin: [
-    `http://localhost:${FRONTEND_PORT}`,
-    `http://127.0.0.1:${FRONTEND_PORT}`,
-  ],
+  origin: true, // Allow all origins - in production, set specific origins
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -72,8 +69,8 @@ async function startServer() {
     // Initialize database schema
     await db.initializeDatabase();
 
-    // Start listening
-    app.listen(PORT, () => {
+    // Start listening on all interfaces (0.0.0.0) for external access
+    app.listen(PORT, '0.0.0.0', () => {
       console.log('');
       console.log('╔═══════════════════════════════════════════════════════════════╗');
       console.log('║          OSPF-TEMPO-X API Server                              ║');

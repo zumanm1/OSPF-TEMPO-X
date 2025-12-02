@@ -1,6 +1,24 @@
 // API Client for OSPF-TEMPO-X Backend
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:9101/api';
+// Dynamically determine API URL based on current window location
+// This allows the app to work both locally and when accessed from external IPs
+function getApiUrl(): string {
+  // Check for environment variable first
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In browser, use the same hostname but different port
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    return `http://${hostname}:9101/api`;
+  }
+  
+  // Fallback for SSR or non-browser environments
+  return 'http://localhost:9101/api';
+}
+
+const API_URL = getApiUrl();
 
 interface ApiResponse<T> {
   data?: T;

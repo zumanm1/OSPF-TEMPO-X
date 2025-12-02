@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "name": "Sample OSPF Network",
+    "version": "1.0",
+    "timestamp": "2024-01-15T10:00:00Z"
+  },
+  "nodes": [
+    {
+      "id": "R1",
+      "name": "Router-NYC",
+      "country": "USA",
+      "type": "core"
+    },
+    {
+      "id": "R2",
+      "name": "Router-LAX",
+      "country": "USA",
+      "type": "core"
+    },
+    {
+      "id": "R3",
+      "name": "Router-CHI",
+      "country": "USA",
+      "type": "core"
+    },
+    {
+      "id": "R4",
+      "name": "Router-LON",
+      "country": "UK",
+      "type": "core"
+    },
+    {
+      "id": "R5",
+      "name": "Router-PAR",
+      "country": "France",
+      "type": "core"
+    },
+    {
+      "id": "R6",
+      "name": "Router-FRA",
+      "country": "Germany",
+      "type": "edge"
+    },
+    {
+      "id": "R7",
+      "name": "Router-TOK",
+      "country": "Japan",
+      "type": "edge"
+    },
+    {
+      "id": "R8",
+      "name": "Router-SYD",
+      "country": "Australia",
+      "type": "edge"
+    }
+  ],
+  "links": [
+    {
+      "id": "L1",
+      "source": "R1",
+      "target": "R2",
+      "cost": 10,
+      "capacity": 10000,
+      "utilization": 45,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/1",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L2",
+      "source": "R1",
+      "target": "R3",
+      "cost": 5,
+      "capacity": 10000,
+      "utilization": 62,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/2",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L3",
+      "source": "R2",
+      "target": "R3",
+      "cost": 8,
+      "capacity": 10000,
+      "utilization": 38,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/2",
+      "targetInterface": "Gi0/0/2"
+    },
+    {
+      "id": "L4",
+      "source": "R1",
+      "target": "R4",
+      "cost": 20,
+      "capacity": 5000,
+      "utilization": 72,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/3",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L5",
+      "source": "R4",
+      "target": "R5",
+      "cost": 3,
+      "capacity": 10000,
+      "utilization": 55,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/2",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L6",
+      "source": "R4",
+      "target": "R6",
+      "cost": 5,
+      "capacity": 5000,
+      "utilization": 48,
+      "type": "standard",
+      "sourceInterface": "Gi0/0/3",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L7",
+      "source": "R5",
+      "target": "R6",
+      "cost": 4,
+      "capacity": 5000,
+      "utilization": 52,
+      "type": "standard",
+      "sourceInterface": "Gi0/0/2",
+      "targetInterface": "Gi0/0/2"
+    },
+    {
+      "id": "L8",
+      "source": "R2",
+      "target": "R7",
+      "cost": 30,
+      "capacity": 2000,
+      "utilization": 85,
+      "type": "asymmetric",
+      "sourceInterface": "Gi0/0/3",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L9",
+      "source": "R7",
+      "target": "R8",
+      "cost": 15,
+      "capacity": 2000,
+      "utilization": 68,
+      "type": "standard",
+      "sourceInterface": "Gi0/0/2",
+      "targetInterface": "Gi0/0/1"
+    },
+    {
+      "id": "L10",
+      "source": "R3",
+      "target": "R4",
+      "cost": 18,
+      "capacity": 5000,
+      "utilization": 58,
+      "type": "backbone",
+      "sourceInterface": "Gi0/0/3",
+      "targetInterface": "Gi0/0/4"
+    }
+  ]
+}

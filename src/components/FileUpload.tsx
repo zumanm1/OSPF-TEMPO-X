@@ -22,10 +22,19 @@ export default function FileUpload() {
       type: node.type || node.node_type,
     }));
 
+    // Track used IDs to ensure uniqueness
+    const usedIds = new Set<string>();
+    
     // Normalize links - auto-generate IDs and map field names
     const normalizedLinks = data.links.map((link: any, index: number) => {
       // Generate ID if missing: source-target-index
-      const linkId = link.id || `${link.source}-${link.target}-${index}`;
+      let linkId = link.id || `${link.source}-${link.target}-${index}`;
+      
+      // Ensure ID uniqueness
+      if (usedIds.has(linkId)) {
+        linkId = `${linkId}-${Date.now()}-${index}`;
+      }
+      usedIds.add(linkId);
       
       // Map interface field names (source_interface -> sourceInterface)
       const sourceInterface = link.sourceInterface || link.source_interface;
@@ -132,14 +141,20 @@ export default function FileUpload() {
     setLoading(true);
     
     try {
-      const response = await fetch('/sample-topology.json');
+      // Use import.meta.env.BASE_URL for correct path in all deployment scenarios
+      const basePath = import.meta.env.BASE_URL || '/';
+      const response = await fetch(`${basePath}sample-topology.json`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const rawData = await response.json();
       const data = normalizeTopology(rawData);
       if (validateTopology(data)) {
         setTopology(data);
       }
     } catch (err) {
-      setError('Failed to load sample topology');
+      console.error('Failed to load sample topology:', err);
+      setError('Failed to load sample topology. Please try uploading a file instead.');
     } finally {
       setLoading(false);
     }

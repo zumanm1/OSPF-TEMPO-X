@@ -1,130 +1,151 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import api from '@/lib/api';
 
 export interface User {
   id: string;
   username: string;
-  password: string;
   role: 'admin' | 'user';
-  createdAt: string;
-  createdBy?: string;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 interface AuthState {
-  users: User[];
   currentUser: User | null;
   isAuthenticated: boolean;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
-  changePassword: (userId: string, newPassword: string) => boolean;
-  createUser: (username: string, password: string, role: 'admin' | 'user') => boolean;
-  deleteUser: (userId: string) => boolean;
-  getUsers: () => User[];
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  login: (username: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
+  clearError: () => void;
 }
-
-// Default admin user
-const defaultAdmin: User = {
-  id: 'admin-001',
-  username: 'netviz_admin',
-  password: 'V3ry$trongAdm1n!2025',
-  role: 'admin',
-  createdAt: new Date().toISOString(),
-};
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      users: [defaultAdmin],
       currentUser: null,
       isAuthenticated: false,
+      isLoading: false,
+      error: null,
 
-      login: (username: string, password: string) => {
-        const { users } = get();
-        const user = users.find(
-          (u) => u.username === username && u.password === password
-        );
-        if (user) {
-          set({ currentUser: user, isAuthenticated: true });
-          return true;
+      login: async (username: string, password: string) => {
+        set({ isLoading: true, error: null });
+        
+        try {
+          const result = await api.login(username, password);
+          
+          if (result.error) {
+            set({ isLoading: false, error: result.error });
+            return false;
+          }
+
+          if (result.data) {
+            set({
+              currentUser: {
+                id: result.data.user.id,
+                username: result.data.user.username,
+                role: result.data.user.role,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+            return true;
+          }
+
+          set({ isLoading: false, error: 'Login failed' });
+          return false;
+        } catch (error) {
+          set({ isLoading: false, error: 'Login failed. Please try again.' });
+          return false;
         }
-        return false;
       },
 
-      logout: () => {
-        set({ currentUser: null, isAuthenticated: false });
+      logout: async () => {
+        try {
+          await api.logout();
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          set({ currentUser: null, isAuthenticated: false, error: null });
+        }
       },
 
-      changePassword: (userId: string, newPassword: string) => {
-        const { users, currentUser } = get();
-        const userIndex = users.findIndex((u) => u.id === userId);
-        
-        if (userIndex === -1) return false;
-        
-        // Only admin can change other users' passwords, or user can change their own
-        if (currentUser?.role !== 'admin' && currentUser?.id !== userId) {
+      checkAuth: async () => {
+        const token = api.getToken();
+        if (!token) {
+          set({ currentUser: null, isAuthenticated: false });
           return false;
         }
 
-        const updatedUsers = [...users];
-        updatedUsers[userIndex] = {
-          ...updatedUsers[userIndex],
-          password: newPassword,
-        };
-
-        set({ users: updatedUsers });
+        set({ isLoading: true });
         
-        // Update current user if they changed their own password
-        if (currentUser?.id === userId) {
-          set({ currentUser: updatedUsers[userIndex] });
+        try {
+          const result = await api.getMe();
+          
+          if (result.error) {
+            api.setToken(null);
+            set({ currentUser: null, isAuthenticated: false, isLoading: false });
+            return false;
+          }
+
+          if (result.data) {
+            set({
+              currentUser: {
+                id: result.data.user.id,
+                username: result.data.user.username,
+                role: result.data.user.role as 'admin' | 'user',
+                createdAt: result.data.user.created_at,
+                lastLogin: result.data.user.last_login,
+              },
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            return true;
+          }
+
+          set({ isLoading: false });
+          return false;
+        } catch (error) {
+          api.setToken(null);
+          set({ currentUser: null, isAuthenticated: false, isLoading: false });
+          return false;
         }
-        
-        return true;
       },
 
-      createUser: (username: string, password: string, role: 'admin' | 'user') => {
-        const { users, currentUser } = get();
+      changePassword: async (currentPassword: string, newPassword: string) => {
+        set({ isLoading: true, error: null });
         
-        // Only admin can create users
-        if (currentUser?.role !== 'admin') return false;
-        
-        // Check if username already exists
-        if (users.some((u) => u.username === username)) return false;
+        try {
+          const result = await api.changePassword(currentPassword, newPassword);
+          
+          if (result.error) {
+            set({ isLoading: false, error: result.error });
+            return false;
+          }
 
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          username,
-          password,
-          role,
-          createdAt: new Date().toISOString(),
-          createdBy: currentUser.username,
-        };
-
-        set({ users: [...users, newUser] });
-        return true;
+          set({ isLoading: false });
+          return true;
+        } catch (error) {
+          set({ isLoading: false, error: 'Failed to change password' });
+          return false;
+        }
       },
 
-      deleteUser: (userId: string) => {
-        const { users, currentUser } = get();
-        
-        // Only admin can delete users
-        if (currentUser?.role !== 'admin') return false;
-        
-        // Cannot delete yourself
-        if (currentUser?.id === userId) return false;
-        
-        // Cannot delete the default admin
-        if (userId === 'admin-001') return false;
-
-        set({ users: users.filter((u) => u.id !== userId) });
-        return true;
-      },
-
-      getUsers: () => {
-        return get().users;
-      },
+      clearError: () => set({ error: null }),
     }),
     {
-      name: 'netviz-auth-storage',
+      name: 'netviz-auth',
+      version: 3,
+      partialize: (state) => ({
+        // Only persist minimal auth state - token is stored separately by api client
+        isAuthenticated: state.isAuthenticated,
+        currentUser: state.currentUser,
+      }),
     }
   )
 );

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { NetworkTopology, NetworkNode, NetworkLink, PathResult, CostChange } from '@/types/network';
 
 interface TopologySnapshot {
@@ -43,7 +44,9 @@ interface NetworkStore {
   reset: () => void;
 }
 
-export const useNetworkStore = create<NetworkStore>((set, get) => ({
+export const useNetworkStore = create<NetworkStore>()(
+  persist(
+    (set, get) => ({
   topology: null,
   selectedNodes: { source: null, target: null },
   pathResults: [],
@@ -216,4 +219,30 @@ export const useNetworkStore = create<NetworkStore>((set, get) => ({
     filterLinkType: null,
     searchQuery: ''
   })
-}));
+    }),
+    {
+      name: 'netviz-network-storage',
+      version: 1,
+      storage: createJSONStorage(() => localStorage),
+      // Only persist these specific fields
+      partialize: (state) => ({
+        topology: state.topology,
+        darkMode: state.darkMode,
+        topologyHistory: state.topologyHistory,
+        currentHistoryIndex: state.currentHistoryIndex,
+      }),
+      // Custom serialization to handle Set and Date
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Ensure highlightedLinks is a Set after rehydration
+          state.highlightedLinks = new Set();
+          // Convert timestamp strings back to Date objects
+          state.topologyHistory = state.topologyHistory.map(snapshot => ({
+            ...snapshot,
+            timestamp: new Date(snapshot.timestamp)
+          }));
+        }
+      },
+    }
+  )
+);

@@ -1,42 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Network, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Network, Lock, User, AlertCircle, Eye, EyeOff, Database } from 'lucide-react';
+import api from '@/lib/api';
 
-interface LoginPageProps {
-  onLoginSuccess: () => void;
-}
-
-export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
+export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
-  const login = useAuthStore((state) => state.login);
+  const { login, isLoading, error, clearError } = useAuthStore();
+
+  // Check API health on mount
+  useEffect(() => {
+    const checkApi = async () => {
+      const result = await api.healthCheck();
+      setApiStatus(result.data?.status === 'healthy' ? 'online' : 'offline');
+    };
+    checkApi();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    clearError();
 
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    const success = login(username, password);
-    
-    if (success) {
-      onLoginSuccess();
-    } else {
-      setError('Invalid username or password');
+    if (apiStatus === 'offline') {
+      return;
     }
-    
-    setIsLoading(false);
+
+    await login(username, password);
   };
 
   return (
@@ -56,6 +53,23 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* API Status */}
+            {apiStatus === 'offline' && (
+              <Alert variant="destructive" className="bg-red-500/10 border-red-500/30">
+                <Database className="h-4 w-4" />
+                <AlertDescription>
+                  API server is offline. Please ensure the backend is running.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {apiStatus === 'checking' && (
+              <Alert className="bg-blue-500/10 border-blue-500/30">
+                <Database className="h-4 w-4 animate-pulse" />
+                <AlertDescription>Checking API connection...</AlertDescription>
+              </Alert>
+            )}
+            
             {error && (
               <Alert variant="destructive" className="bg-red-500/10 border-red-500/30">
                 <AlertCircle className="h-4 w-4" />
@@ -115,7 +129,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             <Button
               type="submit"
               className="w-full h-11 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 smooth-transition font-medium"
-              disabled={isLoading}
+              disabled={isLoading || apiStatus !== 'online'}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

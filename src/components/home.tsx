@@ -21,9 +21,16 @@ import NetworkInventory from './NetworkInventory';
 import NetworkDashboard from './NetworkDashboard';
 import MaintenancePlanner from './MaintenancePlanner';
 import UserManagement from './UserManagement';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Route, DollarSign, Activity, BarChart3, Globe, Grid3x3, Scale, Beaker, Zap, GitBranch, History, Network, Moon, Sun, Eye, EyeOff, Edit2, Bell, Package, LayoutDashboard, Wrench, Users } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { Route, DollarSign, Activity, BarChart3, Globe, Grid3x3, Scale, Beaker, Zap, GitBranch, History, Network, Moon, Sun, Eye, EyeOff, Edit2, Bell, Package, LayoutDashboard, Wrench, Users, ChevronDown, Settings, Gauge, Shield } from 'lucide-react';
 
 function Home() {
   const darkMode = useNetworkStore(state => state.darkMode);
@@ -61,7 +68,8 @@ function Home() {
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center gap-1 overflow-x-auto pb-1">
+        <div className="flex-1 flex items-center justify-center gap-1">
+          {/* Path Analysis - Primary Actions */}
           <Button 
             variant={activeTab === 'path' ? 'default' : 'ghost'} 
             size="sm" 
@@ -81,96 +89,6 @@ function Home() {
             <span className="text-xs">Matrix</span>
           </Button>
           <Button 
-            variant={activeTab === 'cost' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('cost')}
-          >
-            <DollarSign className="w-4 h-4" />
-            <span className="text-xs">Cost</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'whatif' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('whatif')}
-          >
-            <Beaker className="w-4 h-4" />
-            <span className="text-xs">What-If</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'failure' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('failure')}
-          >
-            <Zap className="w-4 h-4" />
-            <span className="text-xs">Failure</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'traffic' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('traffic')}
-          >
-            <GitBranch className="w-4 h-4" />
-            <span className="text-xs">Traffic</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'history' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('history')}
-          >
-            <History className="w-4 h-4" />
-            <span className="text-xs">History</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'blast' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('blast')}
-          >
-            <Activity className="w-4 h-4" />
-            <span className="text-xs">Impact</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'asym' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('asym')}
-          >
-            <Scale className="w-4 h-4" />
-            <span className="text-xs">Asymm</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'capacity' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('capacity')}
-          >
-            <BarChart3 className="w-4 h-4" />
-            <span className="text-xs">Capacity</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'deep' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('deep')}
-          >
-            <Globe className="w-4 h-4" />
-            <span className="text-xs">Deep</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'editor' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('editor')}
-          >
-            <Edit2 className="w-4 h-4" />
-            <span className="text-xs">Editor</span>
-          </Button>
-          <Button 
             variant={activeTab === 'dashboard' ? 'default' : 'ghost'} 
             size="sm" 
             className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
@@ -179,42 +97,138 @@ function Home() {
             <LayoutDashboard className="w-4 h-4" />
             <span className="text-xs">Dashboard</span>
           </Button>
-          <Button 
-            variant={activeTab === 'alerts' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('alerts')}
-          >
-            <Bell className="w-4 h-4" />
-            <span className="text-xs">Alerts</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'inventory' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('inventory')}
-          >
-            <Package className="w-4 h-4" />
-            <span className="text-xs">Inventory</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'maintenance' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('maintenance')}
-          >
-            <Wrench className="w-4 h-4" />
-            <span className="text-xs">Maintenance</span>
-          </Button>
-          <Button 
-            variant={activeTab === 'users' ? 'default' : 'ghost'} 
-            size="sm" 
-            className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
-            onClick={() => setActiveTab('users')}
-          >
-            <Users className="w-4 h-4" />
-            <span className="text-xs">Users</span>
-          </Button>
+
+          {/* Simulation Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant={['whatif', 'failure', 'blast', 'cost'].includes(activeTab) ? 'default' : 'ghost'} 
+                size="sm" 
+                className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
+              >
+                <Beaker className="w-4 h-4" />
+                <span className="text-xs">Simulate</span>
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuLabel className="text-xs">Simulations</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab('whatif')} className="gap-2">
+                <Beaker className="w-4 h-4" />
+                <span>What-If Planner</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('failure')} className="gap-2">
+                <Zap className="w-4 h-4" />
+                <span>Failure Simulator</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('blast')} className="gap-2">
+                <Activity className="w-4 h-4" />
+                <span>Blast Radius</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('cost')} className="gap-2">
+                <DollarSign className="w-4 h-4" />
+                <span>Cost Planner</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Analysis Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant={['traffic', 'asym', 'capacity', 'deep'].includes(activeTab) ? 'default' : 'ghost'} 
+                size="sm" 
+                className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
+              >
+                <Gauge className="w-4 h-4" />
+                <span className="text-xs">Analysis</span>
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuLabel className="text-xs">Advanced Analysis</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab('traffic')} className="gap-2">
+                <GitBranch className="w-4 h-4" />
+                <span>Traffic Flow</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('asym')} className="gap-2">
+                <Scale className="w-4 h-4" />
+                <span>Asymmetry</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('capacity')} className="gap-2">
+                <BarChart3 className="w-4 h-4" />
+                <span>Capacity</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('deep')} className="gap-2">
+                <Globe className="w-4 h-4" />
+                <span>Deep Analysis</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Operations Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant={['alerts', 'inventory', 'maintenance', 'history'].includes(activeTab) ? 'default' : 'ghost'} 
+                size="sm" 
+                className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="text-xs">Operations</span>
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuLabel className="text-xs">Network Operations</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab('alerts')} className="gap-2">
+                <Bell className="w-4 h-4" />
+                <span>Alerts</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('inventory')} className="gap-2">
+                <Package className="w-4 h-4" />
+                <span>Inventory</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('maintenance')} className="gap-2">
+                <Wrench className="w-4 h-4" />
+                <span>Maintenance</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('history')} className="gap-2">
+                <History className="w-4 h-4" />
+                <span>History</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Config Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant={['editor', 'users'].includes(activeTab) ? 'default' : 'ghost'} 
+                size="sm" 
+                className="h-8 gap-1.5 smooth-transition hover:bg-primary/10"
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-xs">Config</span>
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuLabel className="text-xs">Configuration</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setActiveTab('editor')} className="gap-2">
+                <Edit2 className="w-4 h-4" />
+                <span>Topology Editor</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setActiveTab('users')} className="gap-2">
+                <Users className="w-4 h-4" />
+                <span>User Management</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-center gap-3">

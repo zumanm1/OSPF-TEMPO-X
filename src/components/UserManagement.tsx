@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useAuthStore, User } from '@/store/authStore';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
 import { 
   Users, 
   UserPlus, 
@@ -24,21 +23,33 @@ import {
   LogOut
 } from 'lucide-react';
 
+// Safe user type without password hash
+type SafeUser = {
+  id: string;
+  username: string;
+  role: 'admin' | 'user';
+  createdAt: string;
+  createdBy?: string;
+};
+
 interface UserManagementProps {
   onLogout: () => void;
 }
 
 export default function UserManagement({ onLogout }: UserManagementProps) {
   const currentUser = useAuthStore((state) => state.currentUser);
-  const users = useAuthStore((state) => state.users);
+  const getUsers = useAuthStore((state) => state.getUsers);
   const createUser = useAuthStore((state) => state.createUser);
   const deleteUser = useAuthStore((state) => state.deleteUser);
   const changePassword = useAuthStore((state) => state.changePassword);
   const logout = useAuthStore((state) => state.logout);
 
+  // Get users safely (without password hashes)
+  const users = getUsers();
+
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<SafeUser | null>(null);
   
   // Create user form
   const [newUsername, setNewUsername] = useState('');
@@ -135,7 +146,7 @@ export default function UserManagement({ onLogout }: UserManagementProps) {
     onLogout();
   };
 
-  const openPasswordDialog = (user?: User) => {
+  const openPasswordDialog = (user?: SafeUser) => {
     setSelectedUser(user || null);
     setNewPasswordChange('');
     setConfirmPassword('');

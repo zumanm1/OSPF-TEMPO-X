@@ -18,6 +18,7 @@ export default defineConfig({
     },
   },
   server: {
+    port: 9100,
     // @ts-ignore
     allowedHosts: true,
   }

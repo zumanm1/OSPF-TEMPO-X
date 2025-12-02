@@ -1,134 +1,199 @@
-# OSPF Network Analysis & Cost Planning Tool
+# OSPF-TEMPO-X - Network Analysis & Cost Planning Tool
 
-A comprehensive React application for analyzing OSPF network topologies, performing path analysis, cost impact simulations, and capacity planning with interactive network visualization.
+A comprehensive React + Node.js application for analyzing OSPF network topologies, performing path analysis, cost impact simulations, and capacity planning with interactive network visualization.
 
-## Features
+## 🚀 Quick Start
 
-### 🗂️ File Upload & Parser
-- Drag-and-drop interface for JSON topology files
-- Real-time validation of network data
-- Support for nodes, links, OSPF costs, and capacity data
+### Prerequisites
 
-### 🌐 Interactive Network Graph
-- D3.js-powered force-directed graph visualization
-- Color-coded links by type (backbone, asymmetric, standard)
-- Interactive zoom, pan, and drag controls
-- Tooltips with detailed node and link information
-- Search and highlight functionality
-
-### 🛣️ Path Analysis Engine
-- Dijkstra's algorithm for shortest path calculation
-- Primary and backup path computation
-- Total cost, hop count, and capacity bottleneck detection
-- Visual path highlighting on the graph
-
-### 💰 Cost Change Simulator
-- Interactive cost modification panel
-- Before/after comparison
-- Pending changes management
-- Apply or reset cost modifications
-
-### 💥 Blast Radius Viewer
-- Impact analysis for cost changes
-- Affected paths and nodes visualization
-- Color-coded severity levels (low, medium, high, critical)
-- Traffic shift analysis
-
-### 📊 Capacity Analysis Dashboard
-- Link utilization heatmap
-- Congestion point identification
-- Traffic growth simulation
-- Headroom calculation
-
-## Getting Started
+- **Node.js** v18 or later
+- **PostgreSQL** v14 or later
 
 ### Installation
 
 ```bash
-npm install
+# Install dependencies and set up database
+./scripts/install.sh
+
+# Start both API server and frontend
+./scripts/start.sh
 ```
 
-### Development
+### Access the Application
+
+- **Frontend:** http://localhost:9100
+- **API Server:** http://localhost:9101
+- **API Health:** http://localhost:9101/api/health
+
+### Default Login Credentials
+
+- **Username:** `netviz_admin`
+- **Password:** `V3ry$trongAdm1n!2025`
+
+## 📦 Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│                 │     │                 │     │                 │
+│  React Frontend │────▶│  Express API    │────▶│  PostgreSQL     │
+│  (Port 9100)    │     │  (Port 9101)    │     │  (Port 5432)    │
+│                 │     │                 │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+## 🛠️ Scripts Reference
+
+| Script | Description |
+|--------|-------------|
+| `./scripts/install.sh` | Install Node.js dependencies and set up PostgreSQL database |
+| `./scripts/start.sh` | Start both API server and frontend |
+| `./scripts/stop.sh` | Stop all running services |
+| `./scripts/restart.sh` | Restart all services |
+| `./scripts/status.sh` | Show status of all services |
+
+## 🔧 Configuration
+
+Copy `.env.example` to `.env` and configure:
 
 ```bash
-npm run dev
+# Frontend Configuration
+VITE_PORT=9100
+VITE_API_URL=http://localhost:9101/api
+
+# API Server Configuration
+API_PORT=9101
+NODE_ENV=development
+
+# PostgreSQL Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=ospf_tempo_x
+DB_USER=postgres
+DB_PASSWORD=postgres
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
 ```
 
-### Build
+## 📊 Features
+
+### 🗂️ Topology Management
+- Drag-and-drop JSON file upload
+- Real-time validation
+- Database persistence
+- Snapshot history and rollback
+
+### 🌐 Interactive Network Graph
+- D3.js force-directed visualization
+- Color-coded links (backbone, asymmetric, standard)
+- Zoom, pan, and drag controls
+- Interface labels and cost display
+
+### 🛣️ Path Analysis Engine
+- Dijkstra's algorithm for shortest paths
+- K-shortest paths calculation
+- Per-hop cost breakdown (forward/reverse)
+- Capacity bottleneck detection
+
+### 💰 Simulation Tools
+- What-If cost change planner
+- Link failure simulator
+- Blast radius analysis
+- ECMP traffic flow visualization
+
+### 📊 Advanced Analysis
+- Capacity planning with growth simulation
+- Asymmetric cost detection
+- Country-to-country connectivity
+- Single point of failure (SPOF) detection
+
+### 👥 User Management
+- Role-based access (admin/user)
+- Secure password hashing (bcrypt)
+- JWT authentication
+- Session management
+
+## 🗄️ Database Schema
+
+The application uses PostgreSQL with the following main tables:
+
+- `users` - User accounts and authentication
+- `topologies` - Network topology data
+- `topology_snapshots` - Change history
+- `cost_changes` - Cost modification tracking
+- `alert_rules` - Monitoring rules
+- `alert_events` - Alert history
+- `maintenance_windows` - Scheduled maintenance
+
+## 🔒 API Endpoints
+
+### Authentication
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user
+- `PUT /api/auth/password` - Change password
+- `POST /api/auth/logout` - Logout
+
+### Users (Admin only)
+- `GET /api/users` - List all users
+- `POST /api/users` - Create user
+- `PUT /api/users/:id` - Update user
+- `DELETE /api/users/:id` - Delete user
+
+### Topologies
+- `GET /api/topologies` - List topologies
+- `GET /api/topologies/:id` - Get topology with data
+- `POST /api/topologies` - Create topology
+- `PUT /api/topologies/:id` - Update topology
+- `DELETE /api/topologies/:id` - Delete topology
+- `GET /api/topologies/:id/snapshots` - Get snapshots
+- `POST /api/topologies/:id/snapshots` - Create snapshot
+- `POST /api/topologies/:id/snapshots/:snapshotId/restore` - Restore snapshot
+
+## 💻 Development
+
+### Manual Start
+
+```bash
+# Terminal 1: Start API server
+npm run server
+
+# Terminal 2: Start frontend
+npm run dev
+
+# Or both together
+npm run dev:all
+```
+
+### Build for Production
 
 ```bash
 npm run build
 ```
 
-## Usage
+## 📁 Project Structure
 
-### 1. Upload Topology
-
-Click or drag-and-drop a JSON file with your OSPF network topology. The file should follow this structure:
-
-```json
-{
-  "nodes": [
-    {
-      "id": "R1",
-      "name": "Router-NYC",
-      "country": "USA",
-      "type": "core"
-    }
-  ],
-  "links": [
-    {
-      "id": "L1",
-      "source": "R1",
-      "target": "R2",
-      "cost": 10,
-      "capacity": 10000,
-      "utilization": 45,
-      "type": "backbone"
-    }
-  ]
-}
+```
+OSPF-TEMPO-X/
+├── server/                 # Backend API
+│   ├── db/                 # Database schema and connection
+│   ├── middleware/         # Auth middleware
+│   ├── routes/             # API routes
+│   └── index.ts            # Server entry point
+├── src/                    # Frontend React app
+│   ├── components/         # React components
+│   ├── lib/                # API client
+│   ├── store/              # Zustand stores
+│   ├── types/              # TypeScript types
+│   └── utils/              # Graph algorithms
+├── scripts/                # Bash management scripts
+├── public/                 # Static files
+└── .env                    # Environment configuration
 ```
 
-A sample topology file is available at `public/sample-topology.json`.
+## 🔧 Technology Stack
 
-### 2. Explore the Network
-
-- **Zoom/Pan**: Use mouse wheel to zoom, drag to pan
-- **Search**: Type node names in the search box to highlight them
-- **Hover**: Hover over nodes and links to see detailed information
-
-### 3. Analyze Paths
-
-1. Go to the "Path" tab in the right panel
-2. Select source and destination nodes
-3. Click "Calculate Paths" to see primary and backup routes
-4. Paths will be highlighted on the graph
-
-### 4. Plan Cost Changes
-
-1. Go to the "Cost" tab
-2. Select a link and enter a new cost
-3. Add multiple changes to see pending modifications
-4. Click "Apply" to update the topology
-
-### 5. Analyze Impact
-
-1. Go to the "Impact" tab
-2. Select a link and enter a simulated cost
-3. Click "Analyze Impact" to see the blast radius
-4. View affected paths and severity level
-
-### 6. Check Capacity
-
-1. Go to the "Capacity" tab
-2. View current utilization statistics
-3. Enter a growth percentage to simulate traffic increase
-4. See which links will be at risk
-
-## Technology Stack
-
-- **React** - UI framework
+### Frontend
+- **React 18** - UI framework
 - **TypeScript** - Type safety
 - **D3.js** - Network visualization
 - **Zustand** - State management
@@ -136,11 +201,22 @@ A sample topology file is available at `public/sample-topology.json`.
 - **shadcn/ui** - UI components
 - **Vite** - Build tool
 
-## Dark Mode
+### Backend
+- **Node.js** - Runtime
+- **Express.js** - API framework
+- **PostgreSQL** - Database
+- **bcryptjs** - Password hashing
+- **jsonwebtoken** - JWT auth
+- **tsx** - TypeScript execution
 
-Toggle dark mode using the moon/sun icon in the sidebar header.
-
-## License
+## 📝 License
 
 MIT
 
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request

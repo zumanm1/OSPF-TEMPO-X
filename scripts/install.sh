@@ -1,162 +1,175 @@
 #!/bin/bash
 
-# Exit immediately if a command exits with a non-zero status.
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║                    OSPF-TEMPO-X System Requirements Installer             ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
 set -e
 
-# Define colors for output
+# Colors
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║          OSPF-TEMPO-X Installation Script                     ║${NC}"
-echo -e "${BLUE}║          NetViz OSPF Network Analyzer                         ║${NC}"
-echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════╝${NC}"
-echo ""
-
-# Get script directory
+# Get script directory and project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_DIR"
 
-# Function to check if a command exists
-command_exists () {
-  type "$1" &> /dev/null ;
+# Detect OS
+detect_os() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        OS="macos"
+    elif [[ -f /etc/debian_version ]]; then
+        OS="debian"
+    elif [[ -f /etc/redhat-release ]]; then
+        OS="redhat"
+    else
+        OS="unknown"
+    fi
+    echo "$OS"
 }
 
-# Function to check if PostgreSQL is running
-pg_is_running() {
-  if command_exists pg_isready; then
-    pg_isready -q 2>/dev/null
-    return $?
-  fi
-  return 1
-}
+OS=$(detect_os)
 
-# 1. Check for Node.js and npm
-echo -e "${BLUE}[STEP 1/5]${NC} Checking for Node.js and npm..."
-if ! command_exists node; then
-  echo -e "${RED}[ERROR]${NC} Node.js not found."
-  echo -e "${YELLOW}Please install Node.js (v18 or later) from https://nodejs.org/${NC}"
-  echo -e "${YELLOW}Or use nvm: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash${NC}"
-  exit 1
-fi
-
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-  echo -e "${RED}[ERROR]${NC} Node.js version 18 or later required. Current: $(node -v)"
-  exit 1
-fi
-echo -e "${GREEN}[SUCCESS]${NC} Node.js $(node -v) found"
-
-if ! command_exists npm; then
-  echo -e "${RED}[ERROR]${NC} npm not found. Please reinstall Node.js"
-  exit 1
-fi
-echo -e "${GREEN}[SUCCESS]${NC} npm $(npm -v) found"
-
-# 2. Check for PostgreSQL
-echo -e ""
-echo -e "${BLUE}[STEP 2/5]${NC} Checking for PostgreSQL..."
-if ! command_exists psql; then
-  echo -e "${RED}[ERROR]${NC} PostgreSQL client (psql) not found."
-  echo -e ""
-  echo -e "${YELLOW}Please install PostgreSQL:${NC}"
-  echo -e "  macOS:   brew install postgresql@15"
-  echo -e "  Ubuntu:  sudo apt install postgresql postgresql-contrib"
-  echo -e "  Fedora:  sudo dnf install postgresql-server postgresql"
-  echo -e ""
-  exit 1
-fi
-echo -e "${GREEN}[SUCCESS]${NC} PostgreSQL client found: $(psql --version | head -1)"
-
-# 3. Check if PostgreSQL is running
-echo -e ""
-echo -e "${BLUE}[STEP 3/5]${NC} Checking if PostgreSQL server is running..."
-if ! pg_is_running; then
-  echo -e "${YELLOW}[WARNING]${NC} PostgreSQL server does not appear to be running."
-  echo -e ""
-  echo -e "${YELLOW}To start PostgreSQL:${NC}"
-  echo -e "  macOS (Homebrew):  brew services start postgresql@15"
-  echo -e "  Linux (systemd):   sudo systemctl start postgresql"
-  echo -e ""
-  read -p "Do you want to continue anyway? (y/n) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
-  fi
-else
-  echo -e "${GREEN}[SUCCESS]${NC} PostgreSQL server is running"
-fi
-
-# 4. Install Node.js dependencies
-echo -e ""
-echo -e "${BLUE}[STEP 4/5]${NC} Installing Node.js dependencies..."
-if [ -d "node_modules" ] && [ -f "package-lock.json" ]; then
-  echo -e "${YELLOW}[INFO]${NC} node_modules exists. Running npm ci for clean install..."
-  npm ci --silent
-else
-  echo -e "${YELLOW}[INFO]${NC} Installing dependencies..."
-  npm install --silent
-fi
-echo -e "${GREEN}[SUCCESS]${NC} Node.js dependencies installed"
-
-# 5. Setup database
-echo -e ""
-echo -e "${BLUE}[STEP 5/5]${NC} Setting up database..."
-
-# Load environment variables
-if [ -f ".env" ]; then
-  source .env
-fi
-
-DB_NAME="${DB_NAME:-ospf_tempo_x}"
-DB_USER="${DB_USER:-postgres}"
-DB_HOST="${DB_HOST:-localhost}"
-DB_PORT="${DB_PORT:-5432}"
-
-echo -e "${YELLOW}[INFO]${NC} Database configuration:"
-echo -e "         Host: ${DB_HOST}:${DB_PORT}"
-echo -e "         Name: ${DB_NAME}"
-echo -e "         User: ${DB_USER}"
+echo -e "${BLUE}╔═══════════════════════════════════════════════════════════════╗${NC}"
+echo -e "${BLUE}║          OSPF-TEMPO-X System Requirements Installer           ║${NC}"
+echo -e "${BLUE}╚═══════════════════════════════════════════════════════════════╝${NC}"
+echo ""
+echo -e "${BLUE}[INFO]${NC} Detected OS: ${OS}"
 echo ""
 
-# Check if database exists
-if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -lqt 2>/dev/null | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
-  echo -e "${GREEN}[SUCCESS]${NC} Database '$DB_NAME' already exists"
+# Check and install Node.js
+echo -e "${BLUE}[STEP 1/3]${NC} Checking Node.js..."
+if command -v node &> /dev/null; then
+    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [ "$NODE_VERSION" -ge 18 ]; then
+        echo -e "${GREEN}[OK]${NC} Node.js v$(node -v | cut -d'v' -f2) is installed"
+    else
+        echo -e "${YELLOW}[WARNING]${NC} Node.js version is too old (v$(node -v)). Need v18+"
+        INSTALL_NODE=true
+    fi
 else
-  echo -e "${YELLOW}[INFO]${NC} Creating database '$DB_NAME'..."
-  if createdb -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" "$DB_NAME" 2>/dev/null; then
-    echo -e "${GREEN}[SUCCESS]${NC} Database created"
-  else
-    echo -e "${RED}[ERROR]${NC} Failed to create database. You may need to:"
-    echo -e "  1. Ensure PostgreSQL is running"
-    echo -e "  2. Create the database manually: createdb $DB_NAME"
-    echo -e "  3. Update .env file with correct credentials"
-    exit 1
-  fi
+    echo -e "${YELLOW}[INFO]${NC} Node.js not found"
+    INSTALL_NODE=true
 fi
 
-# Run schema migration
-echo -e "${YELLOW}[INFO]${NC} Running database schema migration..."
-if psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f server/db/schema.sql > /dev/null 2>&1; then
-  echo -e "${GREEN}[SUCCESS]${NC} Database schema initialized"
+if [ "$INSTALL_NODE" = true ]; then
+    echo -e "${BLUE}[INSTALL]${NC} Installing Node.js..."
+    case "$OS" in
+        macos)
+            if command -v brew &> /dev/null; then
+                brew install node@20
+            else
+                echo -e "${YELLOW}[INFO]${NC} Installing via nvm..."
+                curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                nvm install 20
+                nvm use 20
+            fi
+            ;;
+        debian)
+            echo -e "${BLUE}[INFO]${NC} Using NodeSource repository..."
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            ;;
+        redhat)
+            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            sudo yum install -y nodejs
+            ;;
+        *)
+            echo -e "${YELLOW}[INFO]${NC} Please install Node.js v18+ manually"
+            echo "  https://nodejs.org/en/download/"
+            ;;
+    esac
+    
+    if command -v node &> /dev/null; then
+        echo -e "${GREEN}[SUCCESS]${NC} Node.js $(node -v) installed"
+    fi
+fi
+
+# Check npm
+echo -e ""
+echo -e "${BLUE}[STEP 2/3]${NC} Checking npm..."
+if command -v npm &> /dev/null; then
+    echo -e "${GREEN}[OK]${NC} npm v$(npm -v) is installed"
 else
-  echo -e "${YELLOW}[WARNING]${NC} Schema migration had issues (tables may already exist)"
+    echo -e "${RED}[ERROR]${NC} npm not found. It should come with Node.js."
+    exit 1
+fi
+
+# Check and install PostgreSQL
+echo -e ""
+echo -e "${BLUE}[STEP 3/3]${NC} Checking PostgreSQL..."
+if command -v psql &> /dev/null; then
+    PSQL_VERSION=$(psql --version | head -1)
+    echo -e "${GREEN}[OK]${NC} ${PSQL_VERSION}"
+else
+    echo -e "${YELLOW}[INFO]${NC} PostgreSQL not found"
+    echo -e "${BLUE}[INSTALL]${NC} Installing PostgreSQL..."
+    
+    case "$OS" in
+        macos)
+            if command -v brew &> /dev/null; then
+                brew install postgresql@15
+                brew services start postgresql@15
+            else
+                echo -e "${YELLOW}[WARNING]${NC} Please install PostgreSQL manually"
+                echo "  brew install postgresql@15"
+            fi
+            ;;
+        debian)
+            sudo apt-get update
+            sudo apt-get install -y postgresql postgresql-contrib
+            sudo systemctl start postgresql
+            sudo systemctl enable postgresql
+            ;;
+        redhat)
+            sudo yum install -y postgresql-server postgresql-contrib
+            sudo postgresql-setup --initdb
+            sudo systemctl start postgresql
+            sudo systemctl enable postgresql
+            ;;
+        *)
+            echo -e "${YELLOW}[WARNING]${NC} Please install PostgreSQL manually"
+            ;;
+    esac
+    
+    if command -v psql &> /dev/null; then
+        echo -e "${GREEN}[SUCCESS]${NC} PostgreSQL installed"
+    fi
+fi
+
+# Verify PostgreSQL is running
+if command -v pg_isready &> /dev/null; then
+    if pg_isready -q 2>/dev/null; then
+        echo -e "${GREEN}[OK]${NC} PostgreSQL is running"
+    else
+        echo -e "${YELLOW}[WARNING]${NC} PostgreSQL is not running"
+        echo -e "${BLUE}[INFO]${NC} Start with:"
+        echo "  macOS:  brew services start postgresql@15"
+        echo "  Linux:  sudo systemctl start postgresql"
+    fi
 fi
 
 echo ""
 echo -e "${GREEN}╔═══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}║          Installation Complete!                               ║${NC}"
+echo -e "${GREEN}║          System Requirements Check Complete!                  ║${NC}"
 echo -e "${GREEN}╚═══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
-echo -e "${BLUE}Next steps:${NC}"
-echo -e "  1. Review/update the .env file with your settings"
-echo -e "  2. Start the application: ${GREEN}./scripts/start.sh${NC}"
+echo -e "${BLUE}Installed:${NC}"
+echo "  Node.js:    $(node -v 2>/dev/null || echo 'Not installed')"
+echo "  npm:        v$(npm -v 2>/dev/null || echo 'Not installed')"
+echo "  PostgreSQL: $(psql --version 2>/dev/null | head -1 || echo 'Not installed')"
 echo ""
-echo -e "${BLUE}Default admin credentials:${NC}"
-echo -e "  Username: ${GREEN}netviz_admin${NC}"
-echo -e "  Password: ${GREEN}V3ry\$trongAdm1n!2025${NC}"
+echo -e "${BLUE}Next steps:${NC}"
+echo "  1. Install dependencies:  ./ospf-tempo-x.sh deps"
+echo "  2. Setup database:        ./ospf-tempo-x.sh db-setup"
+echo "  3. Start servers:         ./ospf-tempo-x.sh start"
+echo ""
+echo -e "${YELLOW}Quick start:${NC}"
+echo "  ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh db-setup && ./ospf-tempo-x.sh start"
 echo ""

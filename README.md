@@ -2,6 +2,8 @@
 
 A comprehensive OSPF (Open Shortest Path First) network topology analyzer and planning tool with PostgreSQL backend and enterprise-grade authentication.
 
+**GitHub Repository:** https://github.com/zumanm1/OSPF-TEMPO-X.git
+
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository

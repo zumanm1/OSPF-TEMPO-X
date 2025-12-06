@@ -6,6 +6,7 @@ import db from './db/index.js';
 import authRoutes from './routes/auth.js';
 import usersRoutes from './routes/users.js';
 import topologiesRoutes from './routes/topologies.js';
+import { initAuthVault, getAuthMode, isAuthVaultActive, getAuthConfig } from './lib/auth-unified.js';
 
 // ES module compatibility
 const __filename = fileURLToPath(import.meta.url);
@@ -105,8 +106,15 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
-    database: dbHealthy ? 'connected' : 'disconnected'
+    database: dbHealthy ? 'connected' : 'disconnected',
+    authVault: isAuthVaultActive() ? 'active' : 'inactive',
+    authMode: getAuthMode()
   });
+});
+
+// Auth config endpoint for frontend
+app.get('/api/auth/config', (req, res) => {
+  res.json(getAuthConfig());
 });
 
 // API Routes
@@ -133,6 +141,9 @@ async function startServer() {
     // Initialize database schema
     await db.initializeDatabase();
 
+    // Initialize Auth-Vault
+    const authVaultActive = await initAuthVault();
+
     // Start listening on configured host
     app.listen(PORT, SERVER_HOST, () => {
       console.log('');
@@ -148,9 +159,14 @@ async function startServer() {
       console.log(`     Host:         ${SERVER_HOST}`);
       console.log(`     IP Whitelist: ${ALLOWED_IPS === '0.0.0.0' ? 'All IPs allowed' : ALLOWED_IPS}`);
       console.log('');
+      console.log('   Auth-Vault:');
+      console.log(`     Status:       ${authVaultActive ? 'Active' : 'Inactive'}`);
+      console.log(`     Mode:         ${getAuthMode()}`);
+      console.log('');
       console.log('   Endpoints:');
       console.log('     POST /api/auth/login     - User login');
       console.log('     GET  /api/auth/me        - Get current user');
+      console.log('     GET  /api/auth/config    - Auth configuration');
       console.log('     GET  /api/users          - List users (admin)');
       console.log('     GET  /api/topologies     - List topologies');
       console.log('     POST /api/topologies     - Create topology');

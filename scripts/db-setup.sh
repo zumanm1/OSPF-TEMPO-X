@@ -172,3 +172,4 @@ echo ""
 echo -e "${BLUE}Next step:${NC}   ./ospf-tempo-x.sh start"
 echo ""
 
+

@@ -13,20 +13,27 @@ git clone https://github.com/zumanm1/OSPF-TEMPO-X.git
 cd OSPF-TEMPO-X
 ```
 
-### 2. Using Bash Scripts (Recommended)
+### 2. First-Time Setup (Recommended)
 
 ```bash
-# One-liner to install and start
-./ospf-tempo-x.sh install && ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh db-setup && ./ospf-tempo-x.sh start
+# Option A: Full isolated setup with nvm (recommended)
+./ospf-tempo-x.sh setup     # Installs nvm + Node.js v20 (one-time)
+./ospf-tempo-x.sh deps      # Install npm dependencies
+./ospf-tempo-x.sh db-setup  # Setup PostgreSQL database
+./ospf-tempo-x.sh start     # Start servers
 
-# Or step by step:
-./ospf-tempo-x.sh install    # Install Node.js, PostgreSQL if not present
-./ospf-tempo-x.sh deps       # Install npm dependencies (frontend + backend)
-./ospf-tempo-x.sh db-setup   # Setup PostgreSQL database
-./ospf-tempo-x.sh start      # Start servers (Frontend: 9100, API: 9101)
+# Option B: Quick start (if Node.js already installed)
+./ospf-tempo-x.sh install && ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh start
 ```
 
-### 3. Manual Installation
+### 3. Returning Users
+
+```bash
+# Just start - auto-switches to correct Node version if nvm installed
+./ospf-tempo-x.sh start
+```
+
+### 4. Manual Installation
 
 ```bash
 # Install frontend dependencies
@@ -50,16 +57,30 @@ npm run start         # Frontend + API server
 
 ## 📜 Available Scripts
 
+### Setup Commands
+
 | Script | Description |
 |--------|-------------|
-| `./ospf-tempo-x.sh install` | Install system requirements (Node.js, npm, PostgreSQL) |
-| `./ospf-tempo-x.sh deps` | Install project dependencies (frontend + backend) |
+| `./ospf-tempo-x.sh setup` | **First-time setup**: Install nvm + Node.js v20 (isolated environment) |
+| `./ospf-tempo-x.sh install` | Check/install system requirements (Node.js, npm, PostgreSQL) |
+| `./ospf-tempo-x.sh deps` | Check/install project dependencies (skips if already installed) |
 | `./ospf-tempo-x.sh db-setup` | Setup PostgreSQL database and initialize schema |
+| `./scripts/setup-nvm.sh` | Standalone nvm + Node.js environment setup script |
+
+### Server Commands
+
+| Script | Description |
+|--------|-------------|
 | `./ospf-tempo-x.sh start` | Start Frontend (9100) and API (9101) servers |
 | `./ospf-tempo-x.sh stop` | Stop all running servers |
 | `./ospf-tempo-x.sh restart` | Restart all servers |
 | `./ospf-tempo-x.sh status` | Show system and server status |
 | `./ospf-tempo-x.sh logs` | View server logs (tail -f) |
+
+### Build Commands
+
+| Script | Description |
+|--------|-------------|
 | `./ospf-tempo-x.sh clean` | Clean build artifacts and node_modules |
 | `./ospf-tempo-x.sh build` | Build for production |
 | `./ospf-tempo-x.sh test` | Run health checks |
@@ -67,13 +88,14 @@ npm run start         # Frontend + API server
 ### Individual Scripts
 
 ```bash
-./scripts/install.sh    # Install requirements only
-./scripts/deps.sh       # Install dependencies only
-./scripts/db-setup.sh   # Setup database only
-./scripts/start.sh      # Start servers
-./scripts/stop.sh       # Stop servers
-./scripts/status.sh     # Check status
-./scripts/restart.sh    # Restart servers
+./scripts/setup-nvm.sh    # Setup nvm + Node.js (interactive)
+./scripts/install.sh      # Install system requirements only
+./scripts/deps.sh         # Install dependencies only
+./scripts/db-setup.sh     # Setup database only
+./scripts/start.sh        # Start all servers (foreground)
+./scripts/stop.sh         # Stop all servers
+./scripts/status.sh       # Check status
+./scripts/restart.sh      # Restart servers
 ```
 
 ### Script Options
@@ -92,9 +114,107 @@ npm run start         # Frontend + API server
 VITE_PORT=8080 API_PORT=8081 ./ospf-tempo-x.sh start
 ```
 
+## 🔒 Isolated Node.js Environment
+
+This project uses **isolated Node.js/npm versions** to avoid conflicts with other projects on your machine.
+
+### Quick Setup (Recommended)
+
+```bash
+# One command to install nvm + Node.js v20
+./ospf-tempo-x.sh setup
+
+# Or use the standalone script
+./scripts/setup-nvm.sh
+```
+
+This will:
+1. Install nvm (Node Version Manager) if not present
+2. Install Node.js v20 LTS
+3. Configure your shell for auto-switching
+4. Display next steps
+
+### Version Pinning Files
+
+| File | Purpose | Tool Support |
+|------|---------|--------------|
+| `.nvmrc` | Pins Node v20 | nvm, fnm |
+| `.node-version` | Pins Node v20 | fnm, volta, nodenv |
+| `package.json` engines | Enforces Node 18+, npm 9+ | npm |
+
+### Using nvm (Recommended)
+
+```bash
+# Option 1: Use our setup script (easiest)
+./ospf-tempo-x.sh setup
+
+# Option 2: Manual nvm installation
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+
+# Restart terminal, then:
+cd OSPF-TEMPO-X
+nvm use          # Automatically uses Node v20 from .nvmrc
+
+# Or manually:
+nvm install 20
+nvm use 20
+```
+
+### Using Volta (Alternative)
+
+```bash
+# Install Volta
+curl https://get.volta.sh | bash
+
+# Pin versions for this project
+cd OSPF-TEMPO-X
+volta pin node@20
+volta pin npm@10
+```
+
+### Using fnm (Fast Alternative)
+
+```bash
+# Install fnm
+curl -fsSL https://fnm.vercel.app/install | bash
+
+# Use project version
+cd OSPF-TEMPO-X
+fnm use          # Reads .node-version
+```
+
+### Automatic Version Switching
+
+All `./ospf-tempo-x.sh` commands automatically:
+1. Detect if nvm is installed
+2. Switch to the project's required Node version (v20)
+3. Warn if using an incompatible version
+
+```bash
+./ospf-tempo-x.sh setup     # Install nvm + Node.js (first-time)
+./ospf-tempo-x.sh install   # Shows isolation status and switches Node version
+./ospf-tempo-x.sh start     # Auto-loads correct Node version before starting
+./ospf-tempo-x.sh deps      # Auto-loads correct Node version before installing
+```
+
+### Shell Auto-Switching (Optional)
+
+Add this to your `~/.zshrc` or `~/.bashrc` for automatic version switching when entering the project directory:
+
+```bash
+# Auto-switch Node version when entering directory with .nvmrc
+autoload -U add-zsh-hook 2>/dev/null
+load-nvmrc() {
+  if [ -f .nvmrc ]; then
+    nvm use 2>/dev/null
+  fi
+}
+add-zsh-hook chpwd load-nvmrc 2>/dev/null
+```
+
 ## 🛠️ System Requirements
 
-- **Node.js** v18.0.0+ (required)
+- **Node.js** v18.0.0 - v24.x (v20 LTS recommended)
 - **npm** v9.0.0+ (comes with Node.js)
 - **PostgreSQL** v14+ (required for database)
 - Modern browser (Chrome, Firefox, Safari, Edge)
@@ -291,7 +411,10 @@ JWT_SECRET=your-super-secret-jwt-key-change-in-production
 ```
 OSPF-TEMPO-X/
 ├── ospf-tempo-x.sh         # Master control script
+├── .nvmrc                  # Node v20 version pinning (nvm)
+├── .node-version           # Node v20 version pinning (fnm, volta)
 ├── scripts/                # Bash management scripts
+│   ├── setup-nvm.sh        # Setup nvm + Node.js (isolated)
 │   ├── install.sh          # Install system requirements
 │   ├── deps.sh             # Install dependencies
 │   ├── db-setup.sh         # Setup database
@@ -426,6 +549,19 @@ curl http://localhost:9101/api/health
 
 # If not, restart servers
 ./ospf-tempo-x.sh restart
+```
+
+### Node.js version issues
+```bash
+# Check current version
+node -v
+
+# Switch to project version using nvm
+nvm use
+
+# Or install correct version
+nvm install 20
+nvm use 20
 ```
 
 ## 🧪 Testing

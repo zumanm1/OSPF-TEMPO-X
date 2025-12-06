@@ -38,32 +38,43 @@ show_help() {
     show_banner
     echo -e "${GREEN}Usage:${NC} ./ospf-tempo-x.sh <command> [options]"
     echo ""
-    echo -e "${YELLOW}Commands:${NC}"
+    echo -e "${YELLOW}Setup Commands:${NC}"
+    echo "  setup       Install nvm + Node.js v20 (isolated environment, recommended)"
     echo "  install     Install system requirements (Node.js, npm, PostgreSQL)"
     echo "  deps        Install project dependencies (frontend + backend)"
     echo "  db-setup    Setup PostgreSQL database and initialize schema"
+    echo ""
+    echo -e "${YELLOW}Server Commands:${NC}"
     echo "  start       Start frontend (${FRONTEND_PORT}) and API (${API_PORT}) servers"
     echo "  stop        Stop all running servers"
     echo "  restart     Restart all servers"
     echo "  status      Show system and server status"
     echo "  logs        View server logs"
+    echo ""
+    echo -e "${YELLOW}Build Commands:${NC}"
     echo "  clean       Clean build artifacts and node_modules"
     echo "  build       Build for production"
     echo "  test        Run tests"
-    echo "  help        Show this help message"
     echo ""
     echo -e "${YELLOW}Options:${NC}"
     echo "  -p, --port PORT    Custom frontend port (default: ${FRONTEND_PORT})"
     echo "  -f, --force        Force operation without confirmation"
     echo "  -v, --verbose      Verbose output"
     echo ""
-    echo -e "${YELLOW}Examples:${NC}"
+    echo -e "${YELLOW}First-Time Setup (Recommended):${NC}"
+    echo "  ./ospf-tempo-x.sh setup      # Install nvm + Node.js v20 (isolated)"
+    echo "  ./ospf-tempo-x.sh deps       # Install npm dependencies"
+    echo "  ./ospf-tempo-x.sh db-setup   # Setup PostgreSQL database"
+    echo "  ./ospf-tempo-x.sh start      # Start servers"
+    echo ""
+    echo -e "${YELLOW}Quick Start (if Node.js already installed):${NC}"
     echo "  ./ospf-tempo-x.sh install && ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh start"
-    echo "  ./ospf-tempo-x.sh start -p 3000"
-    echo "  ./ospf-tempo-x.sh stop --force"
-    echo "  VITE_PORT=8080 ./ospf-tempo-x.sh start"
+    echo ""
+    echo -e "${YELLOW}Returning Users:${NC}"
+    echo "  ./ospf-tempo-x.sh start      # Auto-switches to correct Node version"
     echo ""
     echo -e "${YELLOW}Individual Scripts:${NC}"
+    echo "  ./scripts/setup-nvm.sh  Setup nvm + Node.js (isolated)"
     echo "  ./scripts/install.sh    Install requirements only"
     echo "  ./scripts/deps.sh       Install dependencies only"
     echo "  ./scripts/db-setup.sh   Setup database only"
@@ -78,10 +89,59 @@ command_exists() {
     command -v "$1" &> /dev/null
 }
 
+# Load nvm if available (for isolated Node.js environment)
+load_nvm() {
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        \. "$NVM_DIR/nvm.sh"
+        # Auto-switch to project's Node version if .nvmrc exists
+        if [ -f ".nvmrc" ]; then
+            local required_version=$(cat .nvmrc)
+            local current_version=$(node -v 2>/dev/null | cut -d'v' -f2 | cut -d'.' -f1)
+            if [ "$current_version" != "$required_version" ]; then
+                echo -e "${BLUE}[NVM]${NC} Switching to Node.js v${required_version}..."
+                nvm use "$required_version" 2>/dev/null || nvm install "$required_version"
+            fi
+        fi
+        return 0
+    fi
+    return 1
+}
+
+# Show isolation status
+show_isolation_status() {
+    if load_nvm; then
+        echo -e "${GREEN}[ISOLATED]${NC} Using nvm-managed Node.js (project-specific)"
+        echo -e "  Node.js: $(node -v)"
+        echo -e "  npm:     v$(npm -v)"
+    else
+        echo -e "${YELLOW}[SYSTEM]${NC} Using system Node.js (shared with other projects)"
+        echo -e "  For isolated environment, run: ./ospf-tempo-x.sh setup"
+    fi
+}
+
+# Setup nvm + Node.js (isolated environment)
+cmd_setup() {
+    show_banner
+    echo -e "${BLUE}[SETUP]${NC} Setting up isolated Node.js environment..."
+    
+    if [ -f "./scripts/setup-nvm.sh" ]; then
+        chmod +x ./scripts/setup-nvm.sh
+        ./scripts/setup-nvm.sh
+    else
+        echo -e "${RED}[ERROR]${NC} scripts/setup-nvm.sh not found"
+        exit 1
+    fi
+}
+
 # Install system requirements
 cmd_install() {
     show_banner
     echo -e "${BLUE}[INSTALL]${NC} Installing system requirements..."
+    
+    # Check isolation status
+    show_isolation_status
+    echo ""
     
     if [ -f "./scripts/install.sh" ]; then
         ./scripts/install.sh
@@ -95,6 +155,9 @@ cmd_install() {
 cmd_deps() {
     show_banner
     echo -e "${BLUE}[DEPS]${NC} Installing project dependencies..."
+    
+    # Load nvm if available
+    load_nvm
     
     if [ -f "./scripts/deps.sh" ]; then
         ./scripts/deps.sh "$@"
@@ -128,6 +191,9 @@ cmd_db_setup() {
 cmd_start() {
     show_banner
     echo -e "${BLUE}[START]${NC} Starting servers..."
+    
+    # Load nvm if available
+    load_nvm
     
     if [ -f "./scripts/start.sh" ]; then
         ./scripts/start.sh "$@"
@@ -290,6 +356,7 @@ main() {
     shift 2>/dev/null || true
     
     case "$COMMAND" in
+        setup)      cmd_setup "$@" ;;
         install)    cmd_install "$@" ;;
         deps)       cmd_deps "$@" ;;
         db-setup)   cmd_db_setup "$@" ;;
@@ -312,4 +379,5 @@ main() {
 }
 
 main "$@"
+
 

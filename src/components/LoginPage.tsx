@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Network, Lock, User, AlertCircle, Eye, EyeOff, Database } from 'lucide-react';
+import { Network, Lock, User, AlertCircle, Eye, EyeOff, Database, KeyRound } from 'lucide-react';
 import api from '@/lib/api';
 
 export default function LoginPage() {
@@ -14,16 +14,17 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
-  const { login, isLoading, error, clearError } = useAuthStore();
+  const { login, loginWithKeycloak, isLoading, error, clearError, authMode, initAuth } = useAuthStore();
 
-  // Check API health on mount
+  // Initialize auth and check API health on mount
   useEffect(() => {
-    const checkApi = async () => {
+    const init = async () => {
+      await initAuth();
       const result = await api.healthCheck();
       setApiStatus(result.data?.status === 'healthy' ? 'online' : 'offline');
     };
-    checkApi();
-  }, []);
+    init();
+  }, [initAuth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +77,29 @@ export default function LoginPage() {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
+            {/* Keycloak SSO Button */}
+            {authMode === 'keycloak' && (
+              <div className="space-y-4">
+                <Button
+                  type="button"
+                  onClick={loginWithKeycloak}
+                  className="w-full h-11 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500"
+                >
+                  <KeyRound className="w-4 h-4 mr-2" />
+                  Sign in with SSO
+                </Button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border/50" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or use local credentials</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="username" className="text-sm font-medium">
                 Username

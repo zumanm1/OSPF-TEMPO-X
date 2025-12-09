@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import api from '@/lib/api';
+import { keycloak } from '@/lib/keycloak';
+
+export type AuthMode = 'legacy' | 'keycloak';
 
 export interface User {
   id: string;
@@ -8,6 +11,7 @@ export interface User {
   role: 'admin' | 'user';
   createdAt?: string;
   lastLogin?: string;
+  authSource?: 'legacy' | 'keycloak';
 }
 
 interface AuthState {
@@ -15,13 +19,16 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+  authMode: AuthMode;
+
   // Actions
   login: (username: string, password: string) => Promise<boolean>;
+  loginWithKeycloak: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<boolean>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   clearError: () => void;
+  initAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -31,6 +38,52 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      authMode: 'legacy' as AuthMode,
+
+      initAuth: async () => {
+        set({ isLoading: true });
+        try {
+          const keycloakAvailable = await keycloak.init();
+
+          if (keycloakAvailable && keycloak.isAuthenticated()) {
+            const userInfo = keycloak.getUserInfo();
+            if (userInfo) {
+              set({
+                currentUser: {
+                  id: userInfo.id,
+                  username: userInfo.username,
+                  role: userInfo.roles[0] as 'admin' | 'user',
+                  authSource: 'keycloak',
+                },
+                isAuthenticated: true,
+                authMode: 'keycloak',
+                isLoading: false,
+              });
+              return;
+            }
+          }
+
+          if (keycloakAvailable) {
+            set({ authMode: 'keycloak', isLoading: false });
+            return;
+          }
+
+          // Fall back to legacy auth check
+          set({ authMode: 'legacy', isLoading: false });
+          await get().checkAuth();
+        } catch (error) {
+          console.error('[Auth] Init failed:', error);
+          set({ authMode: 'legacy', isLoading: false });
+        }
+      },
+
+      loginWithKeycloak: () => {
+        if (keycloak.isAvailable()) {
+          keycloak.login();
+        } else {
+          console.error('[Auth] Keycloak is not available');
+        }
+      },
 
       login: async (username: string, password: string) => {
         set({ isLoading: true, error: null });
@@ -66,6 +119,14 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        const { authMode, currentUser } = get();
+
+        // Handle Keycloak logout
+        if (authMode === 'keycloak' && currentUser?.authSource === 'keycloak') {
+          keycloak.logout();
+          return;
+        }
+
         try {
           await api.logout();
         } catch (error) {

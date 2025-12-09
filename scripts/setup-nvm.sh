@@ -22,7 +22,7 @@ cd "$PROJECT_DIR"
 
 # Configuration
 NVM_VERSION="v0.39.7"
-NODE_VERSION="20"
+NODE_VERSION="24"
 REQUIRED_NODE_MAJOR=18
 
 echo -e "${CYAN}╔═══════════════════════════════════════════════════════════════╗${NC}"
@@ -177,5 +177,7 @@ echo ""
 echo -e "${YELLOW}Quick start after terminal restart:${NC}"
 echo "  ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh db-setup && ./ospf-tempo-x.sh start"
 echo ""
+
+
 
 

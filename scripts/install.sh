@@ -87,11 +87,11 @@ if [ "$INSTALL_NODE" = true ]; then
         macos)
             if command -v brew &> /dev/null; then
                 # Check if already installed via brew
-                if brew list node@20 &>/dev/null; then
+                if brew list node@24 &>/dev/null; then
                     echo -e "${GREEN}[SKIP]${NC} Node.js already installed via Homebrew"
                 else
-                    brew install node@20
-                    brew link --overwrite node@20 2>/dev/null || true
+                    brew install node@24
+                    brew link --overwrite node@24 2>/dev/null || true
                 fi
             else
                 echo -e "${BLUE}[INFO]${NC} Installing via nvm..."
@@ -100,17 +100,17 @@ if [ "$INSTALL_NODE" = true ]; then
                 fi
                 export NVM_DIR="$HOME/.nvm"
                 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                nvm install 20
-                nvm use 20
+                nvm install 24
+                nvm use 24
             fi
             ;;
         debian)
             echo -e "${BLUE}[INFO]${NC} Using NodeSource repository..."
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
             sudo apt-get install -y nodejs
             ;;
         redhat)
-            curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+            curl -fsSL https://rpm.nodesource.com/setup_24.x | sudo bash -
             sudo yum install -y nodejs
             ;;
         *)

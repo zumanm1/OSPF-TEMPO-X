@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [apiStatus, setApiStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const hasInitialized = useRef(false);
 
   const { login, loginWithKeycloak, isLoading, error, clearError, authMode, initAuth } = useAuthStore();
 
-  // Initialize auth and check API health on mount
+  // Initialize auth and check API health on mount (only once)
   useEffect(() => {
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const init = async () => {
       await initAuth();
       const result = await api.healthCheck();

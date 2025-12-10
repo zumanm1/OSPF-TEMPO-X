@@ -36,12 +36,13 @@ export const useAuthStore = create<AuthState>()(
     (set, get) => ({
       currentUser: null,
       isAuthenticated: false,
-      isLoading: false,
+      isLoading: true,  // Start as true - will be set to false after initial auth check
       error: null,
       authMode: 'legacy' as AuthMode,
 
       initAuth: async () => {
-        set({ isLoading: true });
+        // Don't set isLoading here - this is just for checking auth mode/keycloak
+        // The main loading state is handled by checkAuth in App.tsx
         try {
           const keycloakAvailable = await keycloak.init();
 
@@ -57,23 +58,21 @@ export const useAuthStore = create<AuthState>()(
                 },
                 isAuthenticated: true,
                 authMode: 'keycloak',
-                isLoading: false,
               });
               return;
             }
           }
 
           if (keycloakAvailable) {
-            set({ authMode: 'keycloak', isLoading: false });
+            set({ authMode: 'keycloak' });
             return;
           }
 
-          // Fall back to legacy auth check
-          set({ authMode: 'legacy', isLoading: false });
-          await get().checkAuth();
+          // Fall back to legacy auth
+          set({ authMode: 'legacy' });
         } catch (error) {
           console.error('[Auth] Init failed:', error);
-          set({ authMode: 'legacy', isLoading: false });
+          set({ authMode: 'legacy' });
         }
       },
 
@@ -139,7 +138,7 @@ export const useAuthStore = create<AuthState>()(
       checkAuth: async () => {
         const token = api.getToken();
         if (!token) {
-          set({ currentUser: null, isAuthenticated: false });
+          set({ currentUser: null, isAuthenticated: false, isLoading: false });
           return false;
         }
 

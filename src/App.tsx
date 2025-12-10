@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import LoginPage from "./components/LoginPage";
@@ -8,10 +8,14 @@ function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
   const checkAuth = useAuthStore((state) => state.checkAuth);
+  const hasCheckedAuth = useRef(false);
 
-  // Check authentication status on app load
+  // Check authentication status on app load (only once)
   useEffect(() => {
-    checkAuth();
+    if (!hasCheckedAuth.current) {
+      hasCheckedAuth.current = true;
+      checkAuth();
+    }
   }, [checkAuth]);
 
   // Show loading spinner while checking auth

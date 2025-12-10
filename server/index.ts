@@ -100,6 +100,23 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
+// Root route - API information
+app.get('/', (req, res) => {
+  res.json({
+    name: 'OSPF-TEMPO-X API',
+    version: '1.0.0',
+    description: 'NetViz OSPF Network Analyzer API Server',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/*',
+      users: '/api/users/*',
+      topologies: '/api/topologies/*'
+    },
+    frontend: `http://localhost:${FRONTEND_PORT}`,
+    documentation: 'See /api/health for server status'
+  });
+});
+
 // Health check
 app.get('/api/health', async (req, res) => {
   const dbHealthy = await db.testConnection();

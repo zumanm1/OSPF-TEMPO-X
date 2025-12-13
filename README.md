@@ -55,6 +55,87 @@ npm run start         # Frontend + API server
 - Username: `netviz_admin`
 - Password: `V3ry$trongAdm1n!2025`
 
+---
+
+## 🔐 Standalone Setup with App0 (Auth-Vault)
+
+If you want to run **only App4 (Tempo-X)** with centralized authentication from App0, follow these steps:
+
+### Prerequisites
+
+- Ubuntu 20.04+ or compatible Linux
+- Node.js v24.x, npm 11.x
+- PostgreSQL 14+
+- Java 17+ (for Keycloak)
+
+### Step 1: Clone App0 (Auth-Vault)
+
+```bash
+cd ~
+mkdir -p the-6-apps && cd the-6-apps
+
+# Clone App0 (Auth-Vault)
+git clone https://github.com/zumanm1/auth-vault.git app0-auth-vault
+```
+
+### Step 2: Start App0 Services (Keycloak + Vault)
+
+```bash
+cd ~/the-6-apps/app0-auth-vault
+./auth-vault.sh install   # First time only
+./auth-vault.sh start
+```
+
+**Verify App0 is running:**
+```bash
+curl http://localhost:9120/health/ready  # Keycloak
+curl http://localhost:9121/v1/sys/health # Vault
+```
+
+### Step 3: Clone and Start App4 (Tempo-X)
+
+```bash
+cd ~/the-6-apps
+
+# Clone App4
+git clone https://github.com/zumanm1/ospf-tempo-x.git app4-tempo-x
+cd app4-tempo-x
+
+# Install and start
+./ospf-tempo-x.sh install
+./ospf-tempo-x.sh deps
+./ospf-tempo-x.sh db-setup
+./ospf-tempo-x.sh start
+```
+
+### Step 4: Verify Both Apps Running
+
+| Service | Port | URL | Health Check |
+|---------|------|-----|--------------|
+| Keycloak (App0) | 9120 | http://localhost:9120/admin | `curl localhost:9120/health/ready` |
+| Vault (App0) | 9121 | http://localhost:9121/ui | `curl localhost:9121/v1/sys/health` |
+| Frontend (App4) | 9100 | http://localhost:9100 | Browser |
+| Backend (App4) | 9101 | http://localhost:9101/api/health | `curl localhost:9101/api/health` |
+
+### Quick Start (Copy-Paste)
+
+```bash
+# Full standalone setup for App0 + App4
+cd ~ && mkdir -p the-6-apps && cd the-6-apps
+git clone https://github.com/zumanm1/auth-vault.git app0-auth-vault
+git clone https://github.com/zumanm1/ospf-tempo-x.git app4-tempo-x
+
+# Start App0
+cd app0-auth-vault && ./auth-vault.sh install && ./auth-vault.sh start
+cd ..
+
+# Start App4
+cd app4-tempo-x
+./ospf-tempo-x.sh install && ./ospf-tempo-x.sh deps && ./ospf-tempo-x.sh db-setup && ./ospf-tempo-x.sh start
+```
+
+---
+
 ## 📜 Available Scripts
 
 ### Setup Commands

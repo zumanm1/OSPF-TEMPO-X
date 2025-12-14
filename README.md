@@ -41,13 +41,31 @@ npm install
 
 # Setup environment
 cp .env.example .env
-# Edit .env with your database credentials
+# IMPORTANT: Edit .env with your actual PostgreSQL credentials:
+#   DB_USER=your_linux_username (e.g., vmuser)
+#   DB_PASSWORD=your_postgres_password (e.g., vmuser)
 
 # Start development servers
 npm run dev           # Frontend only (port 9100)
 # OR for full stack:
 npm run start         # Frontend + API server
 ```
+
+### Important: PostgreSQL Credentials
+
+After copying `.env.example` to `.env`, you **must** update the database credentials:
+
+```bash
+# Edit .env and change these placeholder values:
+DB_USER=your_postgres_user      # Change to your actual PostgreSQL username
+DB_PASSWORD=your_postgres_password  # Change to your actual PostgreSQL password
+
+# On Ubuntu, typically use your Linux username:
+DB_USER=vmuser
+DB_PASSWORD=vmuser
+```
+
+If you see "password authentication failed", verify your `.env` credentials match your PostgreSQL setup.
 
 **Access the app:** http://localhost:9100
 
